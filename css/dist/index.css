@@ -25,7 +25,7 @@ svg {
 .wrap.hide {
   display: none;
 }
-.wordcard_wrap {
+.wordCard_wrap {
   width: -webkit-fit-content;
   width: fit-content;
   min-width: 130px;
@@ -42,7 +42,7 @@ svg {
   text-overflow: ellipsis;
   --max_width: 200px;
 }
-.wordcard_wrap .card {
+.wordCard_wrap .card {
   width: -webkit-fit-content;
   width: fit-content;
   min-width: 130px;
@@ -51,32 +51,32 @@ svg {
   height: fit-content;
   padding: 0 30px 5px 5px;
 }
-.wordcard_wrap .setting_card {
+.wordCard_wrap .setting_card {
   position: absolute;
   right: 5px;
   top: 5px;
 }
-.wordcard_wrap .setting_card .like_wrap {
+.wordCard_wrap .setting_card .like_wrap {
   width: 20px;
   height: 20px;
   position: block;
 }
-.wordcard_wrap .setting_card .like_wrap .like_btn {
+.wordCard_wrap .setting_card .like_wrap .like_btn {
   color: var(--red);
 }
-.wordcard_wrap .setting_card .like_wrap .icon {
+.wordCard_wrap .setting_card .like_wrap .icon {
   width: 100%;
   height: 100%;
   cursor: pointer;
   display: block;
 }
-.wordcard_wrap .setting_card .like_wrap .icon.hide {
+.wordCard_wrap .setting_card .like_wrap .icon.hide {
   display: none;
 }
-.wordcard_wrap .origin_card {
+.wordCard_wrap .origin_card {
   word-wrap: break-word;
 }
-.wordcard_wrap .translate_card {
+.wordCard_wrap .translate_card {
   color: #161823;
   font-size: 1em;
   word-wrap: break-word;

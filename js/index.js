@@ -6,14 +6,39 @@
 // @author       XyGod
 // @match        *://*/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=mozilla.org
-// @grant        GM_setValue
-// @grant        GM_getValue
+// @resource autoTranslateWordCss https://raw.githubusercontent.com/xygodcyx/Auto-Transition-My-Word/master/css/dist/index.css
+// @inject-into content
+// @grant       GM_getResourceText
+// @grant       GM.getValue
+// @grant       GM.setValue
+// @grant       GM.xmlHttpRequest
+// @grant       GM.registerMenuCommand
+// @grant       GM_getValue
+// @grant       GM_setValue
+// @grant       GM_addElement
+// @grant       GM.addElement
+// @grant       GM_listValues
+// @grant       GM_deleteValue
+// @grant       GM.listValues
+// @grant       GM.deleteValue
+// @grant       GM_xmlhttpRequest
+// @grant       GM_registerMenuCommand
+// @grant       GM_addStyle
+// @grant       GM.addStyle
+// @grant       GM_openInTab
+// @grant       GM.openInTab
 // ==/UserScript==
 
 (function () {
 	('use strict');
 
 	let selectText = '';
+
+	/**
+	 * wordCardDom
+	 * @type {HTMLDivElement} wordCardDom - wordCardDom
+	 */
+	let wordCardWrapDom = null;
 
 	/**
 	 * @enum {any} wordStatus
@@ -23,14 +48,6 @@
 		UNSKILLED: 'UNSKILLED',
 		FAMILIAR: 'FAMILIAR',
 	};
-
-	/**
-	 * @typedef {Object} WordInfo
-	 * @property {string} text
-	 * @property {string} translate
-	 * @property {boolean} isLike
-	 * @property {string} type
-	 */
 
 	/**
 	 * @typedef {Object} WordType
@@ -47,35 +64,38 @@
 	let isCardExist = false;
 	let currentWordCard = null;
 	let isWordCardShow = false;
-	/**
-	 * wordCardDom
-	 * @type {HTMLDivElement} wordCardDom - wordCardDom
-	 */
-	let wordCardDom = null;
 
 	init();
-	document.addEventListener('DOMContentLoaded', () => {
-		initDoms();
-		console.log(doms);
-	});
 	async function init() {
-		await createWordCard();
-		await deleteAllWord();
-		await getWords();
-		console.log('init', words);
-		words.push({
-			id: Math.random().toString(32).substring(2),
-			text: 'selectText',
-			wordStatus: WordStatus.UNKNOWN,
-			searchCount: 0,
-			addDate: Date.now(),
-		});
-		await saveWords();
-		document.addEventListener('selectionchange', (e) => {
-			selectText = document.getSelection().toString().trim();
-		});
+		return new Promise(async (resolve, reject) => {
+			await createWordCard();
+			await deleteAllWord();
+			await getWords();
+			initDoms();
+			console.log(doms);
+			// console.log(typeof GM_getResourceText);
+			if (typeof GM_getResourceText !== 'undefined') {
+				const autoTranslateWordCss = GM_getResourceText(
+					'autoTranslateWordCss'
+				);
+				GM_addStyle(autoTranslateWordCss);
+			}
+			console.log('init', words);
+			words.push({
+				id: Math.random().toString(32).substring(2),
+				text: 'selectText',
+				wordStatus: WordStatus.UNKNOWN,
+				searchCount: 0,
+				addDate: Date.now(),
+			});
+			await saveWords();
+			document.addEventListener('selectionchange', (e) => {
+				selectText = document.getSelection().toString().trim();
+			});
 
-		console.log('get', words);
+			console.log('get', words);
+			resolve(true);
+		});
 	}
 
 	/**
@@ -85,6 +105,7 @@
 	 * @property {HTMLElement} like_btn
 	 * @property {HTMLElement} unlike_btn
 	 * @property {HTMLElement} word_translate
+	 * @property {HTMLElement} wordCard_wrap
 	 */
 
 	/**
@@ -97,39 +118,46 @@
 		like_btn: null,
 		unlike_btn: null,
 		word_translate: null,
+		wordCard_wrap: null,
 	};
 	async function initDoms() {
 		return new Promise(async (resolve, reject) => {
-			if (!wordCardDom) {
+			if (!wordCardWrapDom) {
 				await createWordCard();
 			}
-			if (!wordCardDom) {
+			if (!wordCardWrapDom) {
 				throw new Error('wordCardDom is null');
 			}
-			doms.like_btn = wordCardDom.querySelector(
+			doms.like_btn = wordCardWrapDom.querySelector(
 				'.setting_card .like_wrap .like_btn'
 			);
-			doms.unlike_btn = wordCardDom.querySelector(
+			doms.unlike_btn = wordCardWrapDom.querySelector(
 				'.setting_card .like_wrap  .unlike_btn'
 			);
-			doms.word_translate = wordCardDom.querySelector(
+			doms.word_translate = wordCardWrapDom.querySelector(
 				'.translate_card .word_translate'
 			);
-			doms.word_type = wordCardDom.querySelector(
+			doms.word_type = wordCardWrapDom.querySelector(
 				'.origin_card .word_type'
 			);
-			doms.word_text = wordCardDom.querySelector(
+			doms.word_text = wordCardWrapDom.querySelector(
 				'.origin_card .word_text'
 			);
 			resolve(true);
 		});
 	}
 
+	/**
+	 * @typedef {Object} WordCardPositionType
+	 * @property {number} left
+	 * @property {number} top
+	 */
+
 	function createWordCard() {
 		return new Promise((resolve, reject) => {
 			try {
 				const wordCardHtmlStr = `
-                <div class="wordcard_wrap">
+                <div class="wordCard_wrap">
                     <div class="setting_card">
                         <div class="like_wrap">
                             <div class="like_btn icon">
@@ -157,11 +185,16 @@
                     <div class="more"></div>
                     </div>
                                     `;
-				wordCardDom = document.createElement('div');
-				wordCardDom.classList.add('wrap');
-				wordCardDom.innerHTML = wordCardHtmlStr;
-				document.body.appendChild(wordCardDom);
+				wordCardWrapDom = document.createElement('div');
+				wordCardWrapDom.classList.add('wrap');
+				wordCardWrapDom.innerHTML = wordCardHtmlStr;
+				document.body.appendChild(wordCardWrapDom);
 				resolve(true);
+				window.addEventListener('mousemove', (e) => {
+					wordInfo.wordCardPosition.left = e.clientX;
+					wordInfo.wordCardPosition.top = e.clientY;
+					updateWordCard(wordInfo);
+				});
 			} catch (err) {
 				reject(err);
 			}
@@ -169,21 +202,52 @@
 	}
 
 	async function showWordCard() {
-		if (wordCardDom) {
-			wordCardDom.classList.remove('hide');
+		if (wordCardWrapDom) {
+			wordCardWrapDom.classList.remove('hide');
 		} else {
 			await createWordCard();
 		}
 	}
+
+	/**
+	 * @typedef {Object} WordInfo
+	 * @property {string} text
+	 * @property {string} translate
+	 * @property {boolean} isLike
+	 * @property {string} type
+	 * @property {WordCardPositionType} wordCardPosition
+	 */
+
+	/**
+	 * wordInfo
+	 * @type {WordInfo} wordInfo - wordInfo
+	 */
+	const wordInfo = {
+		text: '',
+		translate: '',
+		isLike: false,
+		type: '',
+		wordCardPosition: {
+			left: 0,
+			top: 0,
+		},
+	};
+
 	/**
 	 * updateWordCard
 	 * @param {WordInfo} wordInfo - wordInfo
 	 */
-	function updateWordCard(wordInfo) {}
+	function updateWordCard(wordInfo) {
+		if (!wordCardWrapDom) {
+			return;
+		}
+		wordCardWrapDom.style.left = wordInfo.wordCardPosition.left + 'px';
+		wordCardWrapDom.style.top = wordInfo.wordCardPosition.top + 'px';
+	}
 
 	function hideWordCard() {
-		if (wordCardDom) {
-			wordCardDom.classList.add('hide');
+		if (wordCardWrapDom) {
+			wordCardWrapDom.classList.add('hide');
 		}
 	}
 
@@ -196,10 +260,12 @@
 	 */
 	let words = [];
 	async function saveWords() {
-		await GM.setValue('words', words);
+		if (typeof GM === 'undefined') return;
+		await GM?.setValue('words', words);
 	}
 	async function getWords() {
-		words = await GM.getValue('words', []);
+		if (typeof GM === 'undefined') return;
+		words = await GM?.getValue('words', []);
 	}
 
 	async function deleteWord(id) {
@@ -211,7 +277,8 @@
 		await saveWords();
 	}
 	async function deleteAllWord() {
-		await GM.deleteValue('words');
+		if (typeof GM === 'undefined') return;
+		await GM?.deleteValue('words');
 		await saveWords();
 	}
 })();
