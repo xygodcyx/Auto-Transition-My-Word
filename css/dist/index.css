@@ -37,8 +37,6 @@
 #XyGod_AutoTranslate_WordWrap .XyGod_AutoTranslate_wordCard_wrap {
   width: -webkit-fit-content;
   width: fit-content;
-  min-width: -webkit-fit-content;
-  min-width: fit-content;
   max-width: var(--max_width);
   height: -webkit-fit-content;
   height: fit-content;

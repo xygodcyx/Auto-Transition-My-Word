@@ -440,8 +440,8 @@
 		// 计算菜单的位置
 		// var width = wordCardWrapDom.clientHeight
 		wordCardWrapDom.classList.remove('XyGod_AutoTranslate_hide')
-		var width = wordCardWrapDom.clientHeight
-		var height = wordCardWrapDom.clientWidth
+		var width = wordCardWrapDom.clientWidth
+		var height = wordCardWrapDom.clientHeight
 
 		var mouseX = e.clientX
 		var mouseY = e.clientY
@@ -462,6 +462,10 @@
 			mouseY = 0
 		}
 
+		console.log('width', width)
+		console.log('height', height)
+		console.log('mouseX', mouseX)
+		console.log('mouseY', mouseY)
 		// 设置菜单的位置
 		wordInfo.wordCardPosition.left = mouseX
 		wordInfo.wordCardPosition.top = mouseY
@@ -631,8 +635,6 @@
 #XyGod_AutoTranslate_WordWrap .XyGod_AutoTranslate_wordCard_wrap {
   width: -webkit-fit-content;
   width: fit-content;
-  min-width: -webkit-fit-content;
-  min-width: fit-content;
   max-width: var(--max_width);
   height: -webkit-fit-content;
   height: fit-content;
