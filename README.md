@@ -8,6 +8,6 @@ An Extremely Simple Translation Plugin
 
 <p align="right" style="font-size:16px">by Xygod</p>
 
-<span>油猴下载地址:</span>
-<a style="color:black;font-size:12px" href="https://greasyfork.org/zh-TW/scripts/499355-auto-translate-my-word-%E9%80%89%E4%B8%AD%E8%87%AA%E5%8A%A8%E7%BF%BB%E8%AF%91-%E9%80%89%E4%B8%AD%E7%BF%BB%E8%AF%91
-">https://greasyfork.org/zh-TW/scripts/499355-auto-translate-my-word-%E9%80%89%E4%B8%AD%E8%87%AA%E5%8A%A8%E7%BF%BB%E8%AF%91-%E9%80%89%E4%B8%AD%E7%BF%BB%E8%AF%91</a>
+<span style="font-size:14px">油猴下载地址:</span>
+<a style="color:black;font-size:12px" href="https://greasyfork.org/zh-TW/scripts/499355-auto-translate-my-word
+">https://greasyfork.org/zh-TW/scripts/499355-auto-translate-my-word</a>
