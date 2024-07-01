@@ -462,10 +462,6 @@
 			mouseY = 0
 		}
 
-		console.log('width', width)
-		console.log('height', height)
-		console.log('mouseX', mouseX)
-		console.log('mouseY', mouseY)
 		// 设置菜单的位置
 		wordInfo.wordCardPosition.left = mouseX
 		wordInfo.wordCardPosition.top = mouseY
