@@ -97,7 +97,7 @@
 					!isWordCardShow
 				) {
 					wordInfo.text = selectText
-					showWordCard()
+					sendTranslateRequest()
 				}
 				isSelectionchange = false
 			})
@@ -133,6 +133,7 @@
 	}
 
 	async function sendTranslateRequest() {
+		hideWordCard()
 		const curtime = Math.round(new Date().getTime() / 1000)
 		const dev_url = 'http://127.0.0.1:3000/translate'
 		const product_url = 'http://93mqvi.natappfree.cc/translate'
@@ -145,9 +146,28 @@
 				url: dev ? dev_url : dict_translate_api,
 				headers: {
 					'Content-Type': 'application/x-www-form-urlencoded',
+					'Accept': 'application/json, text/plain, */*',
+					'Accept-Encoding': 'gzip, deflate, br, zstd',
+					'Accept-Language': 'zh-TW,zh-CN;q=0.9,zh;q=0.8,en;q=0.7',
+					'Host': 'dict.youdao.com',
+					'Origin': 'https://m.youdao.com',
+					'Referer': 'https://m.youdao.com/',
+					'Sec-Ch-Ua':
+						'"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
+					'Sec-Ch-Ua-Mobile': '?0',
+					'Sec-Ch-Ua-Platform': 'Windows',
+					'Sec-Fetch-Dest': 'empty',
+					'Sec-Fetch-Mode': 'cors',
+					'Sec-Fetch-Site': 'same-site',
+					'User-Agent':
+						'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
 				},
 				responseType: 'json',
-				data: `q=${wordInfo.text}&keyfrom=webdict&le=en&t=1$sign=03225f50e968c51cb4d9b76b1bbef92d`,
+				data: `q=${wordInfo.text.toString(
+					'utf-8'
+				)}&keyfrom=webdict&le=en&t=1&sign=${Math.random()
+					.toString(32)
+					.substring(2)}`,
 			})
 			if (typeof response.responseText === 'undefined') {
 				console.log('没有response.responseText数据')
@@ -180,6 +200,9 @@
 				}
 			}
 			updateWordCardPosition(e)
+			setTimeout(() => {
+				showWordCard()
+			}, 10)
 		} else {
 			const response = await fetch(dict_translate_api, {
 				method: 'POST',
@@ -314,7 +337,6 @@
 			doms.unlike_btn.addEventListener('click', () => {
 				unlike()
 			})
-			console.log(doms)
 			resolve(true)
 		})
 	}
@@ -415,42 +437,46 @@
 			return
 		}
 		// 计算菜单的位置
-		var width = wordCardWrapDom.offsetWidth
-		var height = wordCardWrapDom.offsetHeight
+		// var width = wordCardWrapDom.clientHeight
+		wordCardWrapDom.classList.remove('XyGod_AutoTranslate_hide')
+		var width = wordCardWrapDom.clientHeight
+		var height = wordCardWrapDom.clientWidth
+
 		var mouseX = e.clientX
 		var mouseY = e.clientY
-		console.log('width', width)
-		console.log('height', height)
-		console.log('mouseX', mouseX)
-		console.log('mouseY', mouseY)
 
 		// 检查菜单是否超出右边界
 		if (mouseX + width > window.innerWidth) {
 			mouseX = window.innerWidth - width
+		}
+		if (mouseX < 0) {
+			mouseX = 0
 		}
 
 		// 检查菜单是否超出底部边界
 		if (mouseY + height > window.innerHeight) {
 			mouseY = window.innerHeight - height
 		}
+		if (mouseY < 0) {
+			mouseY = 0
+		}
 
 		// 设置菜单的位置
 		wordInfo.wordCardPosition.left = mouseX
 		wordInfo.wordCardPosition.top = mouseY
 
-		// wordCardWrapDom.style.left = +wordInfo.wordCardPosition.left + 'px'
-		// wordCardWrapDom.style.top = +wordInfo.wordCardPosition.top + 'px'
-		wordCardWrapDom.style.transform = `translateX(${+wordInfo
-			.wordCardPosition.left}px) translateY(${+wordInfo.wordCardPosition
-			.top}px)`
+		wordCardWrapDom.style.left = +wordInfo.wordCardPosition.left + 'px'
+		wordCardWrapDom.style.top = +wordInfo.wordCardPosition.top + 'px'
+		wordCardWrapDom.classList.add('XyGod_AutoTranslate_hide')
+		// wordCardWrapDom.style.transform = `translateX(${+wordInfo
+		// 	.wordCardPosition.left}px) translateY(${+wordInfo.wordCardPosition
+		// 	.top}px)`
 	}
 	async function showWordCard() {
 		if (wordCardWrapDom) {
 			wordCardWrapDom.classList.remove('XyGod_AutoTranslate_hide')
 			isWordCardShow = true
 			doms.word_text.textContent = wordInfo.text
-
-			sendTranslateRequest()
 
 			const word = getWordInWords(wordInfo.text)
 			if (word) {
@@ -548,9 +574,6 @@
 			deleteWord(word.id)
 		}
 		await saveWords()
-
-		console.log('curWordLike', wordInfo.isLike)
-		console.log(words)
 	}
 	function showLike() {
 		doms.unlike_btn.classList.toggle('XyGod_AutoTranslate_hide', true)
@@ -564,8 +587,6 @@
 		wordInfo.isLike = true
 		showLike()
 		await addWord()
-		console.log('curWordLike', wordInfo.isLike)
-		console.log(words)
 	}
 
 	function addStyle() {
@@ -579,7 +600,7 @@
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 99999999 !important;
+  z-index: 2147483647 !important;
   margin: 0;
   padding: 0;
   transition: all 0.2s;
@@ -591,7 +612,7 @@
   --red: #f00056;
   --black: #424c50;
   --white: #ffffff;
-  --max_width: 1300px;
+  --max_width: 300px;
   --min_height: 30px;
   --max_height: 1300px;
 }
@@ -621,8 +642,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: auto;
 }
 #XyGod_AutoTranslate_WordWrap .XyGod_AutoTranslate_wordCard_wrap .XyGod_AutoTranslate_card {
   width: -webkit-fit-content;

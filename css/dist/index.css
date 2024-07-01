@@ -5,8 +5,9 @@
 }
 #XyGod_AutoTranslate_WordWrap {
   position: fixed;
-  transform: translateX(0) translateY(0);
-  z-index: 99999999 !important;
+  top: 0;
+  left: 0;
+  z-index: 2147483647 !important;
   margin: 0;
   padding: 0;
   transition: all 0.2s;
@@ -18,7 +19,7 @@
   --red: #f00056;
   --black: #424c50;
   --white: #ffffff;
-  --max_width: 1300px;
+  --max_width: 300px;
   --min_height: 30px;
   --max_height: 1300px;
 }
