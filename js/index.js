@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Auto Translate My Word 选中自动翻译 选中翻译
+// @name         Auto Translate My Word
 // @namespace    http://github.com./xygodcyx/
 // @version      1.0.0
 // @description 选中自动翻译! Auto Translate
