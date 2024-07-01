@@ -1,0 +1,5 @@
+{
+    "Codegeex.OnlyKeyControl": true,
+    "prettier.singleQuote": true,
+    "prettier.semi": false,
+}

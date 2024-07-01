@@ -4,13 +4,18 @@
 	box-sizing: border-box;
 }
 #XyGod_AutoTranslate_WordWrap {
-	position: absolute;
-	top: 0;
-	left: 0;
+	position: fixed;
+	// top: 0;
+	// left: 0;
+	transform: translateX(0) translateY(0);
 	z-index: 99999999 !important;
 	margin: 0;
 	padding: 0;
+	transition: all 0.2s;
 	box-sizing: border-box;
+	width: fit-content;
+	height: fit-content;
+
 	svg {
 		width: 100%;
 		height: 100%;
@@ -26,35 +31,35 @@
 	--black: #424c50;
 	// --black: #161823;
 	--white: #ffffff;
+	--max_width: 1300px;
+	--min_height: 30px;
+	--max_height: 1300px;
 	.XyGod_AutoTranslate_wordCard_wrap {
 		width: fit-content;
-		min-width: 130px;
+		min-width: fit-content;
 		max-width: var(--max_width);
 		height: fit-content;
 		min-height: var(--min_height);
-		max-height: 300px;
+		max-height: var(--max_height);
 		background-color: antiquewhite;
-		// background: #161823;
+		padding: 5px;
 		position: relative;
 		display: flex;
 		flex-direction: column;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		--max_width: 200px;
-		--min_height: 30px;
+		overflow: auto;
 
 		.XyGod_AutoTranslate_card {
 			width: fit-content;
-			min-width: 130px;
+			// min-width: 130px;
 			max-width: var(--max_width);
 			height: fit-content;
-			padding: 0 30px 5px 5px;
 		}
 
 		.XyGod_AutoTranslate_setting_card {
 			position: absolute;
 			right: 5px;
 			top: 5px;
+			display: none;
 			.XyGod_AutoTranslate_like_wrap {
 				width: 20px;
 				height: 20px;
@@ -76,13 +81,17 @@
 		.XyGod_AutoTranslate_origin_card {
 			color: #161823;
 			word-wrap: break-word;
+			display: block;
+			&.XyGod_AutoTranslate_hide {
+				display: none;
+			}
 		}
 		.XyGod_AutoTranslate_translate_card {
 			color: #161823;
 			font-size: 1em;
-
 			word-wrap: break-word;
 			border-radius: 5px;
+			font-size: 12px;
 		}
 	}
 }

@@ -6,9 +6,10 @@
 // @author       XyGod
 // @match        *://*/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=mozilla.org
-// @inject-into content
+// @grant       GM_xmlhttpRequest
+// @grant       GM.xmlhttpRequest
 // @grant       GM_getResourceText
-// @connect     zntuch.natappfree.cc
+// @connect     *
 // @grant       GM.getValue
 // @grant       GM.setValue
 // @grant       GM.registerMenuCommand
@@ -20,7 +21,6 @@
 // @grant       GM_deleteValue
 // @grant       GM.listValues
 // @grant       GM.deleteValue
-// @grant       GM_xmlhttpRequest
 // @grant       GM_registerMenuCommand
 // @grant       GM_addStyle
 // @grant       GM.addStyle
@@ -28,16 +28,16 @@
 // @grant       GM.openInTab
 // ==/UserScript==
 
-(function () {
-	('use strict');
+;(function () {
+	;('use strict')
 
-	let selectText = '';
+	let selectText = ''
 
 	/**
 	 * wordCardDom
 	 * @type {HTMLDivElement} wordCardDom - wordCardDom
 	 */
-	let wordCardWrapDom = null;
+	let wordCardWrapDom = null
 
 	/**
 	 * @enum {any} wordStatus
@@ -46,7 +46,7 @@
 		UNKNOWN: 'UNKNOWN',
 		UNSKILLED: 'UNSKILLED',
 		FAMILIAR: 'FAMILIAR',
-	};
+	}
 
 	/**
 	 * @typedef {Object} WordType
@@ -60,110 +60,204 @@
 	 * @property {number} addDate
 	 */
 
-	let isCardExist = false;
-	let currentWordCard = null;
-	let isWordCardShow = false;
+	let isCardExist = false
+	let currentWordCard = null
+	let isWordCardShow = false
 
-	let isMouseDown = false;
-	let isMouseUp = false;
-	let isSelectionchange = false;
-	let isMouseEnterWordCardWrap = false;
-	let isMouseLevelWordCardWrap = false;
+	let isMouseDown = false
+	let isMouseUp = false
+	let isSelectionchange = false
+	let isMouseEnterWordCardWrap = false
+	let isMouseLevelWordCardWrap = false
 
-	init();
+	init()
 	async function init() {
 		return new Promise(async (resolve, reject) => {
-			await createWordCard();
+			await createWordCard()
 			// await deleteAllWord();
-			await getWords();
-			resolve();
-			initDoms();
-			hideWordCard();
+			await getWords()
+			resolve()
+			initDoms()
+			hideWordCard()
 			if (typeof GM_getResourceText !== 'undefined') {
-				addStyle();
+				addStyle()
 			}
 			document.addEventListener('mousedown', () => {
-				isMouseDown = true;
-				isMouseUp = false;
-				isSelectionchange = false;
-			});
+				isMouseDown = true
+				isMouseUp = false
+				isSelectionchange = false
+			})
 			document.addEventListener('mouseup', () => {
-				isMouseUp = true;
-				isMouseDown = false;
-				if (isSelectionchange && selectText) {
-					wordInfo.text = selectText;
-					showWordCard();
+				isMouseUp = true
+				isMouseDown = false
+				if (
+					isSelectionchange &&
+					!isMouseEnterWordCardWrap &&
+					selectText &&
+					!isWordCardShow
+				) {
+					wordInfo.text = selectText
+					showWordCard()
 				}
-				isSelectionchange = false;
-			});
+				isSelectionchange = false
+			})
 
 			document.addEventListener('selectionchange', (e) => {
-				isSelectionchange = true;
+				isSelectionchange = true
 				if (isMouseEnterWordCardWrap) {
-					return;
+					return
 				}
-				selectText = document.getSelection().toString().trim();
-			});
+				selectText = document.getSelection().toString().trim()
+			})
 
-			let timeout = null;
+			let timeout = null
 			wordCardWrapDom.addEventListener('mouseleave', (e) => {
-				isMouseLevelWordCardWrap = true;
-				isMouseEnterWordCardWrap = false;
-				timeout = setTimeout(() => {
-					hideWordCard();
-				}, 300);
-			});
+				isMouseLevelWordCardWrap = true
+				isMouseEnterWordCardWrap = false
+				// timeout = setTimeout(() => {
+				// 	hideWordCard()
+				// }, 300)
+			})
 			wordCardWrapDom.addEventListener('mouseenter', (e) => {
-				isMouseEnterWordCardWrap = true;
-				isMouseLevelWordCardWrap = false;
-				clearTimeout(timeout);
-				if (!isWordCardShow) showWordCard();
-			});
+				isMouseEnterWordCardWrap = true
+				isMouseLevelWordCardWrap = false
+			})
 			document.addEventListener('mousedown', () => {
 				if (isMouseLevelWordCardWrap && isWordCardShow) {
-					hideWordCard();
+					hideWordCard()
 				}
-			});
+			})
 
-			resolve(true);
-		});
+			resolve(true)
+		})
 	}
 
 	async function sendTranslateRequest() {
-		// q	text	待翻译文本	True	必须是UTF-8编码
-		// from	text	源语言	True	参考下方 支持语言
-		// to	text	目标语言	True	参考下方 支持语言
-		// appKey	text	应用ID	True	可在应用管理 查看
-		// salt	text	UUID	True	uuid，唯一通用识别码
-		// sign	text	签名	True	sha256(应用ID+input+salt+curtime+应用密钥)
-		// signType	text	签名类型	True	v3
-		// curtime	text	当前UTC时间戳(秒)	true	TimeStamp
-		const dev_url = 'http://127.0.0.1/translate';
-		const product_url = 'http://zntuch.natappfree.cc/translate';
-		const dev = false;
-		GM_xmlhttpRequest({
-			method: 'POST',
-			url: dev ? dev_url : product_url,
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			data: JSON.stringify({
-				text: wordInfo.text,
-				fromLang: 'en',
-				targetLang: 'zh-CHS',
-			}),
-			onload: function (response) {
-				const data = JSON.parse(response.responseText);
-				console.log(data);
-				if (data.translation) {
-					wordInfo.translate = data.translation;
-					doms.word_translate.textContent = wordInfo.translate;
+		const curtime = Math.round(new Date().getTime() / 1000)
+		const dev_url = 'http://127.0.0.1:3000/translate'
+		const product_url = 'http://93mqvi.natappfree.cc/translate'
+		const dict_translate_api = `https://dict.youdao.com/jsonapi_s?doctype=json&jsonversion=4&time=${curtime}`
+		const dev = false
+		const use_fetch = false
+		if (!use_fetch && typeof GM.xmlHttpRequest !== 'undefined') {
+			const response = await GM.xmlHttpRequest({
+				method: 'POST',
+				url: dev ? dev_url : dict_translate_api,
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded',
+				},
+				responseType: 'json',
+				data: `q=${wordInfo.text}&keyfrom=webdict&le=en&t=1$sign=03225f50e968c51cb4d9b76b1bbef92d`,
+			})
+			if (typeof response.responseText === 'undefined') {
+				console.log('没有response.responseText数据')
+				return
+			}
+			const result_data = JSON.parse(response.responseText)
+			console.log(result_data)
+
+			const data = result_data
+			if (typeof data.meta === 'undefined') {
+				console.log('没有翻译的data.meta数据')
+				return
+			}
+			if (data.meta.dicts.includes('fanyi')) {
+				//长文本(句子、段落等)
+				changeWordCard2Sentence(data)
+			} else {
+				if (data.meta.dicts.includes('individual')) {
+					// 单词
+					changeWordCard2Word(data)
+				} else if (data.meta.dicts.includes('ec')) {
+					// 短语
+					changeWordCard2Phrase(data)
+				} else if (data.meta.dicts.includes('ce')) {
+					// 其他
+					changeWordCard2Other(data)
+				} else {
+					// 实在翻译不了了
+					changeWordCard2UnTranslate()
 				}
-			},
-			onerror: function (error) {
-				console.error('Error:', error);
-			},
-		});
+			}
+			updateWordCardPosition(e)
+		} else {
+			const response = await fetch(dict_translate_api, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded',
+					'Accept': 'application/json',
+					'Cookie':
+						'STUDY_SESS="Bbh2lGBArp6SJUZHXlNv4gCTLwFnKCu7iLzNhoLH88wVT0+B0jIfaCu/K/p0YDk0EmfMUL5Qe8HbDzKg+1n4PPvDZpOz6ClYUc8Nkjshdp9U+sOJaP43JEQWtXJ2/69cM2Z5bsvligfW0aAAh/IMF4mpquiwVkIRzMFhxl7qKpYLhur2Nm2wEb9HcEikV+3FTI8+lZKyHhiycNQo+g+/oA=="; STUDY_INFO="yd.c2a5a6cd016740b5a@163.com|8|1463763113|1689432695932"; DICT_SESS=v2|zZZCECT_LyUlOfpy6LOGRlM0LlEk4qK0z50MwLnLqB0P40fkWOMkY0gz6LJBRHQL0PBRLPykLpuROlOL64k4q40e4kMYfO4O50; DICT_LOGIN=1||1689432695987; OUTFOX_SEARCH_USER_ID_NCOO=466487302.8125763; OUTFOX_SEARCH_USER_ID=-197975799@52.195.225.91; JSESSIONID=abchQfUhHhWF1dW8bDFbz; UM_distinctid=19069a67c91819-068c9f74d0b3a1-26001b51-1fa400-19069a67c92e6c; NTES_YD_SESS=99Gol5E6Cpd5fh4AV9XS2Qcb4lKcQsg1QHjsQOvgQ0mX_q13_H8IY.HI.2ifxS.vWYMrec96ulTGV05.Cr1P4cNlrWpoRhhhFQPOUzkkVbcocS_EUQ75TNe4nKSOLTqdGuX99NvvF2ggODRFbvvQqhHdEmKX_HnQFD_CjCWAWx3QgacB2oJ815YD4a9aK9OJrp0POEwrtCUOg1lYGu8r0Xwft2DbXUb3BxUGAugYeTlLT; S_INFO=1719759677|0|0&60##|13145495910; P_INFO=13145495910|1719759677|1|youdao_zhiyun2018|00&99|null&null&null#jix&360400#10#0#0|&0||13145495910',
+				},
+				body: {
+					q: wordInfo.text,
+					keyfrom: 'webdict',
+					le: 'en',
+					t: 1,
+					client: 'web',
+					sign: '96eea02156f165866c59ad446fcfa7ed',
+				},
+			})
+		}
+	}
+	function changeWordCard2Sentence(data) {
+		hideWordTextAndType()
+		wordInfo.translate = data.fanyi.tran
+		doms.word_translate.textContent = wordInfo.translate
+	}
+	function changeWordCard2Word(data) {
+		wordInfo.translate = getTranslateWordStr(true)
+		wordInfo.type = getTranslateWordType()
+		doms.word_translate.innerHTML = wordInfo.translate
+		doms.word_type.textContent = wordInfo.type
+		showWordTextAndType()
+		function getTranslateWordType() {
+			let result = ''
+			const types = []
+			data.individual.trs.forEach((tr) => {
+				types.push(tr.pos)
+			})
+
+			result = [...new Set(types)].join('/')
+			return result
+		}
+		function getTranslateWordStr(html = false) {
+			let result = ''
+			const translates = []
+			data.individual.trs.forEach((tr) => {
+				translates.push(`${tr.pos}${tr.tran}`)
+			})
+			result = html ? translates.join('<br>') : translates.join(' ')
+			return result
+		}
+	}
+
+	function changeWordCard2Phrase(data) {
+		hideWordTextAndType()
+		try {
+			wordInfo.translate = data.ec.web_trans.flat().join('/')
+			doms.word_translate.innerText = wordInfo.translate
+		} catch (err) {
+			doms.word_translate.innerText = wordInfo.text
+		}
+	}
+	function changeWordCard2Other(data) {
+		hideWordTextAndType()
+		wordInfo.translate = data.ce.word.trs[0]['#text']
+		doms.word_translate.innerText = wordInfo.translate
+	}
+	function changeWordCard2UnTranslate() {
+		hideWordTextAndType()
+		wordInfo.translate = '暂无翻译'
+		doms.word_translate.innerText = wordInfo.translate
+	}
+	function hideWordTextAndType() {
+		doms.word_text.style.display = 'none'
+		doms.word_type.style.display = 'none'
+	}
+	function showWordTextAndType() {
+		doms.word_text.style.display = 'inline'
+		doms.word_type.style.display = 'inline'
 	}
 
 	/**
@@ -187,43 +281,48 @@
 		unlike_btn: null,
 		word_translate: null,
 		wordCard_wrap: null,
-	};
+	}
 	async function initDoms() {
 		return new Promise(async (resolve, reject) => {
 			if (!wordCardWrapDom) {
-				await createWordCard();
+				await createWordCard()
 			}
 			if (!wordCardWrapDom) {
-				throw new Error('wordCardDom is null');
+				throw new Error('wordCardDom is null')
 			}
 			doms.like_btn = wordCardWrapDom.querySelector(
 				'.XyGod_AutoTranslate_wordCard_wrap .XyGod_AutoTranslate_setting_card .XyGod_AutoTranslate_like_wrap .XyGod_AutoTranslate_like_btn'
-			);
+			)
 			doms.unlike_btn = wordCardWrapDom.querySelector(
 				'.XyGod_AutoTranslate_wordCard_wrap .XyGod_AutoTranslate_setting_card .XyGod_AutoTranslate_like_wrap  .XyGod_AutoTranslate_unlike_btn'
-			);
+			)
 			doms.word_translate = wordCardWrapDom.querySelector(
 				'.XyGod_AutoTranslate_wordCard_wrap .XyGod_AutoTranslate_translate_card .XyGod_AutoTranslate_word_translate'
-			);
+			)
 			doms.word_type = wordCardWrapDom.querySelector(
 				'.XyGod_AutoTranslate_wordCard_wrap .XyGod_AutoTranslate_origin_card .XyGod_AutoTranslate_word_type'
-			);
+			)
 			doms.word_text = wordCardWrapDom.querySelector(
 				'.XyGod_AutoTranslate_wordCard_wrap .XyGod_AutoTranslate_origin_card .XyGod_AutoTranslate_word_text'
-			);
+			)
 			doms.wordCard_wrap = wordCardWrapDom.querySelector(
 				'.XyGod_AutoTranslate_wordCard_wrap'
-			);
+			)
 			doms.like_btn.addEventListener('click', () => {
-				like();
-			});
+				like()
+			})
 			doms.unlike_btn.addEventListener('click', () => {
-				unlike();
-			});
-			console.log(doms);
-			resolve(true);
-		});
+				unlike()
+			})
+			console.log(doms)
+			resolve(true)
+		})
 	}
+	/**
+	 * e
+	 * @type {MouseEvent} e - e
+	 */
+	let e = null
 
 	/**
 	 * @typedef {Object} WordCardPositionType
@@ -253,31 +352,30 @@
                         </div>
                     </div>
                     <div class="XyGod_AutoTranslate_origin_card XyGod_AutoTranslate_card">
-                        <span class="XyGod_AutoTranslate_word_type">n.</span>
-                        <span class="XyGod_AutoTranslate_word_text">declaration</span>
+                        <span class="XyGod_AutoTranslate_word_type"></span>
+                        <span class="XyGod_AutoTranslate_word_text"></span>
                     </div>
                     <div class="XyGod_AutoTranslate_translate_card XyGod_AutoTranslate_card">
-                        <p class="XyGod_AutoTranslate_word_translate">声明，表白；申报（单）；（板球）对一赛局结束的宣布；公告，宣告
+                        <p class="XyGod_AutoTranslate_word_translate">
                         </p>
                     </div>
                     <div class="XyGod_AutoTranslate_more"></div>
                     </div>
-                                    `;
-				wordCardWrapDom = document.createElement('div');
-				wordCardWrapDom.classList.add('XyGod_AutoTranslate_WordWrap');
-				wordCardWrapDom.id = 'XyGod_AutoTranslate_WordWrap';
-				wordCardWrapDom.innerHTML = wordCardHtmlStr;
-				document.body.appendChild(wordCardWrapDom);
-				resolve(true);
-				window.addEventListener('mousemove', (e) => {
-					wordInfo.wordCardPosition.left = e.clientX;
-					wordInfo.wordCardPosition.top = e.clientY;
-					updateWordCardPosition(wordInfo);
-				});
+                                    `
+				wordCardWrapDom = document.createElement('div')
+				wordCardWrapDom.classList.add('XyGod_AutoTranslate_WordWrap')
+				wordCardWrapDom.id = 'XyGod_AutoTranslate_WordWrap'
+				wordCardWrapDom.innerHTML = wordCardHtmlStr
+				document.body.appendChild(wordCardWrapDom)
+				resolve(true)
+				window.addEventListener('mousemove', (event) => {
+					e = event
+					// updateWordCardPosition(e)
+				})
 			} catch (err) {
-				reject(err);
+				reject(err)
 			}
-		});
+		})
 	}
 
 	/**
@@ -305,83 +403,106 @@
 			top: 0,
 		},
 		searchCount: 0,
-	};
+	}
 
 	/**
 	 * updateWordCard
 	 * @param {WordInfo} wordInfo - wordInfo
+	 * @param {MouseEvent} e - e
 	 */
-	function updateWordCardPosition(wordInfo) {
+	function updateWordCardPosition(e) {
 		if (!wordCardWrapDom) {
-			return;
+			return
 		}
-		if (isWordCardShow) {
-			return;
+		// 计算菜单的位置
+		var width = wordCardWrapDom.offsetWidth
+		var height = wordCardWrapDom.offsetHeight
+		var mouseX = e.clientX
+		var mouseY = e.clientY
+		console.log('width', width)
+		console.log('height', height)
+		console.log('mouseX', mouseX)
+		console.log('mouseY', mouseY)
+
+		// 检查菜单是否超出右边界
+		if (mouseX + width > window.innerWidth) {
+			mouseX = window.innerWidth - width
 		}
-		wordCardWrapDom.style.left = wordInfo.wordCardPosition.left + 'px';
-		wordCardWrapDom.style.top =
-			+wordInfo.wordCardPosition.top -
-			+doms.wordCard_wrap.clientHeight +
-			'px';
+
+		// 检查菜单是否超出底部边界
+		if (mouseY + height > window.innerHeight) {
+			mouseY = window.innerHeight - height
+		}
+
+		// 设置菜单的位置
+		wordInfo.wordCardPosition.left = mouseX
+		wordInfo.wordCardPosition.top = mouseY
+
+		// wordCardWrapDom.style.left = +wordInfo.wordCardPosition.left + 'px'
+		// wordCardWrapDom.style.top = +wordInfo.wordCardPosition.top + 'px'
+		wordCardWrapDom.style.transform = `translateX(${+wordInfo
+			.wordCardPosition.left}px) translateY(${+wordInfo.wordCardPosition
+			.top}px)`
 	}
 	async function showWordCard() {
 		if (wordCardWrapDom) {
-			wordCardWrapDom.classList.remove('XyGod_AutoTranslate_hide');
-			isWordCardShow = true;
-			doms.word_text.textContent = wordInfo.text;
+			wordCardWrapDom.classList.remove('XyGod_AutoTranslate_hide')
+			isWordCardShow = true
+			doms.word_text.textContent = wordInfo.text
 
-			sendTranslateRequest();
-			const word = getWordInWords(wordInfo.text);
+			sendTranslateRequest()
+
+			const word = getWordInWords(wordInfo.text)
 			if (word) {
-				wordInfo.isLike = word.isLike;
-				updateWord(word.text, word.searchCount + 1);
-				showLike();
+				wordInfo.isLike = word.isLike
+				updateWord(word.text, word.searchCount + 1)
+				showLike()
 			} else {
-				showUnLike();
+				showUnLike()
 			}
 		} else {
-			await createWordCard();
+			await createWordCard()
 		}
 	}
 
 	function hideWordCard() {
 		if (wordCardWrapDom) {
-			wordCardWrapDom.classList.add('XyGod_AutoTranslate_hide');
-			isWordCardShow = false;
+			wordCardWrapDom.classList.add('XyGod_AutoTranslate_hide')
 		}
+		isWordCardShow = false
 	}
 
 	function getMatchWord() {
-		let matchWord = words.find((word) => word.word == selectText);
-		return matchWord;
+		let matchWord = words.find((word) => word.word == selectText)
+		return matchWord
 	}
 	/**
 	 * @type {Array<WordType>} words - words
 	 */
-	let words = [];
+	let words = []
 	async function saveWords() {
-		if (typeof GM === 'undefined') return;
-		await GM?.setValue('words', words);
+		if (typeof GM === 'undefined') return
+		await GM?.setValue('words', words)
 	}
 	async function getWords() {
-		if (typeof GM === 'undefined') return;
-		words = await GM?.getValue('words', []);
+		if (typeof GM === 'undefined') return
+		words = await GM?.getValue('words', [])
 	}
 
 	function getWordInWords(text, translate) {
-		let result = words.find((word) => word.text === text);
-		return result;
+		let result = words.find((word) => word.text === text)
+		return result
 	}
 	function getWordIndexInWords(text) {
-		let result = words.findIndex((word) => word.text === text);
-		return result;
+		let result = words.findIndex((word) => word.text === text)
+		return result
 	}
 
 	async function addWord() {
-		const word = getWordInWords(wordInfo.text);
+		const word = getWordInWords(wordInfo.text)
 		if (word) {
-			console.warn(`${text} already exist`);
-			return;
+			console.warn(`${text} already exist`)
+			return
 		}
 		words.push({
 			id: Math.random().toString(16).substring(2),
@@ -391,79 +512,88 @@
 			wordStatus: WordStatus.UNKNOWN,
 			searchCount: 0,
 			addDate: Date.now(),
-		});
-		await saveWords();
+		})
+		await saveWords()
 	}
 	function updateWord(text, searchCount) {
-		const index = getWordIndexInWords(text);
-		const word = words[index];
+		const index = getWordIndexInWords(text)
+		const word = words[index]
 		if (!word) {
-			console.warn(`${text} is not exist`);
-			return;
+			console.warn(`${text} is not exist`)
+			return
 		}
-		words[index].searchCount = searchCount;
-		saveWords();
+		words[index].searchCount = searchCount
+		saveWords()
 	}
 
 	async function deleteWord(id) {
 		words.forEach((word) => {
 			if (word.id == id) {
-				words.splice(words.indexOf(word), 1);
+				words.splice(words.indexOf(word), 1)
 			}
-		});
-		await saveWords();
+		})
+		await saveWords()
 	}
 	async function deleteAllWord() {
-		if (typeof GM === 'undefined') return;
-		await GM?.deleteValue('words');
-		await saveWords();
+		if (typeof GM === 'undefined') return
+		await GM?.deleteValue('words')
+		await saveWords()
 	}
-	async function like() {
-		wordInfo.isLike = false;
-		showUnLike();
-		const word = getWordInWords(wordInfo.text);
-		if (word) {
-			deleteWord(word.id);
-		}
-		await saveWords();
 
-		console.log('curWordLike', wordInfo.isLike);
-		console.log(words);
+	async function like() {
+		wordInfo.isLike = false
+		showUnLike()
+		const word = getWordInWords(wordInfo.text)
+		if (word) {
+			deleteWord(word.id)
+		}
+		await saveWords()
+
+		console.log('curWordLike', wordInfo.isLike)
+		console.log(words)
 	}
 	function showLike() {
-		doms.unlike_btn.classList.toggle('XyGod_AutoTranslate_hide', true);
-		doms.like_btn.classList.toggle('XyGod_AutoTranslate_hide', false);
+		doms.unlike_btn.classList.toggle('XyGod_AutoTranslate_hide', true)
+		doms.like_btn.classList.toggle('XyGod_AutoTranslate_hide', false)
 	}
 	function showUnLike() {
-		doms.unlike_btn.classList.toggle('XyGod_AutoTranslate_hide', false);
-		doms.like_btn.classList.toggle('XyGod_AutoTranslate_hide', true);
+		doms.unlike_btn.classList.toggle('XyGod_AutoTranslate_hide', false)
+		doms.like_btn.classList.toggle('XyGod_AutoTranslate_hide', true)
 	}
 	async function unlike() {
-		wordInfo.isLike = true;
-		showLike();
-		await addWord();
-		console.log('curWordLike', wordInfo.isLike);
-		console.log(words);
+		wordInfo.isLike = true
+		showLike()
+		await addWord()
+		console.log('curWordLike', wordInfo.isLike)
+		console.log(words)
 	}
 
 	function addStyle() {
 		GM_addStyle(`
-        #XyGod_AutoTranslate_WordWrap.XyGod_AutoTranslate_WordWrap * {
+#XyGod_AutoTranslate_WordWrap.XyGod_AutoTranslate_WordWrap * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 #XyGod_AutoTranslate_WordWrap {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   z-index: 99999999 !important;
   margin: 0;
   padding: 0;
+  transition: all 0.2s;
   box-sizing: border-box;
+  width: -webkit-fit-content;
+  width: fit-content;
+  height: -webkit-fit-content;
+  height: fit-content;
   --red: #f00056;
   --black: #424c50;
   --white: #ffffff;
+  --max_width: 1300px;
+  --min_height: 30px;
+  --max_height: 1300px;
 }
 #XyGod_AutoTranslate_WordWrap svg {
   width: 100%;
@@ -479,34 +609,33 @@
 #XyGod_AutoTranslate_WordWrap .XyGod_AutoTranslate_wordCard_wrap {
   width: -webkit-fit-content;
   width: fit-content;
-  min-width: 130px;
+  min-width: -webkit-fit-content;
+  min-width: fit-content;
   max-width: var(--max_width);
   height: -webkit-fit-content;
   height: fit-content;
   min-height: var(--min_height);
-  max-height: 300px;
+  max-height: var(--max_height);
   background-color: antiquewhite;
+  padding: 5px;
   position: relative;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   text-overflow: ellipsis;
-  --max_width: 200px;
-  --min_height: 30px;
 }
 #XyGod_AutoTranslate_WordWrap .XyGod_AutoTranslate_wordCard_wrap .XyGod_AutoTranslate_card {
   width: -webkit-fit-content;
   width: fit-content;
-  min-width: 130px;
   max-width: var(--max_width);
   height: -webkit-fit-content;
   height: fit-content;
-  padding: 0 30px 5px 5px;
 }
 #XyGod_AutoTranslate_WordWrap .XyGod_AutoTranslate_wordCard_wrap .XyGod_AutoTranslate_setting_card {
   position: absolute;
   right: 5px;
   top: 5px;
+  display: none;
 }
 #XyGod_AutoTranslate_WordWrap .XyGod_AutoTranslate_wordCard_wrap .XyGod_AutoTranslate_setting_card .XyGod_AutoTranslate_like_wrap {
   width: 20px;
@@ -528,14 +657,19 @@
 #XyGod_AutoTranslate_WordWrap .XyGod_AutoTranslate_wordCard_wrap .XyGod_AutoTranslate_origin_card {
   color: #161823;
   word-wrap: break-word;
+  display: block;
+}
+#XyGod_AutoTranslate_WordWrap .XyGod_AutoTranslate_wordCard_wrap .XyGod_AutoTranslate_origin_card.XyGod_AutoTranslate_hide {
+  display: none;
 }
 #XyGod_AutoTranslate_WordWrap .XyGod_AutoTranslate_wordCard_wrap .XyGod_AutoTranslate_translate_card {
   color: #161823;
   font-size: 1em;
   word-wrap: break-word;
   border-radius: 5px;
+  font-size: 12px;
 }
 
-`);
+`)
 	}
-})();
+})()
