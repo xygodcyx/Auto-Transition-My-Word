@@ -1,15 +1,15 @@
 // ==UserScript==
-// @name         Auto Translate My Word
+// @name         Auto Translate My Word 选中自动翻译 选中翻译
 // @namespace    http://github.com./xygodcyx/
 // @version      1.0.0
-// @description  try to take over the world!
+// @description 选中自动翻译! Auto Translate
 // @author       XyGod
 // @match        *://*/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=mozilla.org
 // @grant       GM_xmlhttpRequest
 // @grant       GM.xmlhttpRequest
 // @grant       GM_getResourceText
-// @connect     *
+// @connect     dict.youdao.com
 // @grant       GM.getValue
 // @grant       GM.setValue
 // @grant       GM.registerMenuCommand
@@ -26,6 +26,7 @@
 // @grant       GM.addStyle
 // @grant       GM_openInTab
 // @grant       GM.openInTab
+// @license MIT
 // ==/UserScript==
 
 ;(function () {
@@ -637,7 +638,8 @@
   height: fit-content;
   min-height: var(--min_height);
   max-height: var(--max_height);
-  background-color: antiquewhite;
+  background-color: #0000009f;
+  border-radius: 5px;
   padding: 5px;
   position: relative;
   display: flex;
@@ -675,21 +677,29 @@
   display: none;
 }
 #XyGod_AutoTranslate_WordWrap .XyGod_AutoTranslate_wordCard_wrap .XyGod_AutoTranslate_origin_card {
-  color: #161823;
   word-wrap: break-word;
   display: block;
+}
+#XyGod_AutoTranslate_WordWrap .XyGod_AutoTranslate_wordCard_wrap .XyGod_AutoTranslate_origin_card .XyGod_AutoTranslate_word_type {
+  font-size: 0.875rem;
+  color: #ffffff;
+}
+#XyGod_AutoTranslate_WordWrap .XyGod_AutoTranslate_wordCard_wrap .XyGod_AutoTranslate_origin_card .XyGod_AutoTranslate_word_text {
+  color: #ffffff;
+  font-size: 1.625rem;
 }
 #XyGod_AutoTranslate_WordWrap .XyGod_AutoTranslate_wordCard_wrap .XyGod_AutoTranslate_origin_card.XyGod_AutoTranslate_hide {
   display: none;
 }
 #XyGod_AutoTranslate_WordWrap .XyGod_AutoTranslate_wordCard_wrap .XyGod_AutoTranslate_translate_card {
-  color: #161823;
   font-size: 1em;
   word-wrap: break-word;
   border-radius: 5px;
-  font-size: 12px;
+  font-size: 1rem;
 }
-
+#XyGod_AutoTranslate_WordWrap .XyGod_AutoTranslate_wordCard_wrap .XyGod_AutoTranslate_translate_card .XyGod_AutoTranslate_word_translate {
+  color: #ffffff;
+}
 `)
 	}
 })()
